@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) 2017 songww
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
@@ -63,7 +78,8 @@ class Configure(ConfigItem):
         return ConfigItem(json.loads(content.decode('utf8')))
 
     def default(self):
-        d = ConfigItem(
+        return ConfigItem(
+            last_server=None,
             auto_connect=True,
             reconnect=True,
             local_port=1080,
@@ -77,17 +93,16 @@ class Configure(ConfigItem):
             user=GLib.get_user_name(),
             forbidden_ip=[],
             daemon='daemon',
-            prefer_ipv6=False
+            prefer_ipv6=False,
+            pid_file=os.path.join(
+                GLib.get_user_runtime_dir(),
+                GLib.get_application_name() + '.pid'
+            ),
+            log_file=os.path.join(
+                GLib.get_user_runtime_dir(),
+                GLib.get_application_name() + '.log'
+            )
         )
-        d['pid-file'] = os.path.join(
-            GLib.get_user_runtime_dir(),
-            GLib.get_application_name() + '.pid'
-        )
-        d['log-file'] = os.path.join(
-            GLib.get_user_runtime_dir(),
-            GLib.get_application_name() + '.log'
-        )
-        return d
 
 Config = Configure()
 try:

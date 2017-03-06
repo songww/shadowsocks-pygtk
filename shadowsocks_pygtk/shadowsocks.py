@@ -1,7 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf8
-
-# __main__.py
 #
 # Copyright (C) 2017 songww
 #
@@ -18,16 +16,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gio', '2.0')
 gi.require_version('GLib', '2.0')
+
 from gi.repository import Gtk, GLib, Gio  # noqa
-from .window import AppWindow   # noqa
-from .config import ConfigItem, Config  # noqa
-from .encrypt import method_supported  # noqa
-from .daemon import control  # noqa
+try:
+    from shadowsocks.cryptor import method_supported  # noqa
+except ImportError as e:
+    from shadowsocks.encrypt import method_supported  # noqa
+
+from shadowsocks_pygtk.window import AppWindow   # noqa
+from shadowsocks_pygtk.config import ConfigItem, Config  # noqa
+from shadowsocks_pygtk.daemon import Daemon  # noqa
 
 
 class Shadowsocks(Gtk.Application):
@@ -49,7 +51,7 @@ class Shadowsocks(Gtk.Application):
         self.create_signals()
         self.connected_server = None
         if Config.application.auto_connect and Config.application.last_server:
-            control('start', Config.application.last_server)
+            Daemon.control('start', Config.application.last_server)
             self.connected_server = Config.application.last_server
 
     def create_signals(self):
@@ -59,13 +61,17 @@ class Shadowsocks(Gtk.Application):
             self.add_action(action)
 
     def on_connection_toggled(self, action, parameter):
-        if self.window.connect_toggle.get_active():
-            return control('stop', self.connected_server)
+        if self.window.connect_toggle.get_active() and self.connected_server:
+            try:
+                return Daemon.control('stop', self.connected_server)
+            except Exception:
+                pass
         (model, idx) = self.window.server_view.get_selection().get_selected()
         name = model[idx][0]
-        control('start', name)
+        Daemon.control('start', name)
         Config.application.last_server = self.connected_server = name
         Config.save_application()
+        print('x')
 
     def on_server_saved(self, action, parameter):
         name = self.window.config_name.get_text()
@@ -82,18 +88,4 @@ class Shadowsocks(Gtk.Application):
         )
         Config.save_server(name)
         if self.connected_server == name:
-            control('restart', name)
-
-
-def main():
-    application = Shadowsocks()
-
-    try:
-        ret = application.run(sys.argv)
-    except SystemExit as e:
-        ret = e.code
-
-    sys.exit(ret)
-
-if __name__ == '__main__':
-    main()
+            Daemon.control('restart', name)

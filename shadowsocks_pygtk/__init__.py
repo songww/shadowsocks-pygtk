@@ -1,4 +1,5 @@
-# __main__.py
+#!/usr/bin/env python3
+# coding: utf8
 #
 # Copyright (C) 2017 songww
 #
@@ -16,10 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from .shadowsocks import main
+
+from shadowsocks_pygtk.shadowsocks import Shadowsocks
+
+
+def main():
+    application = Shadowsocks()
+
+    try:
+        code = application.run(sys.argv)
+    except SystemExit as e:
+        code = e.code
+
+    sys.exit(code)
+
 
 if __name__ == '__main__':
     main()
